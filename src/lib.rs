@@ -23,7 +23,6 @@ fn index() -> &'static str {
     HOME_TEXT
 }
 
-
 pub fn get_rocket() -> Rocket {
     rocket::ignite().mount("/", routes![index])
 }
