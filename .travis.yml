@@ -1,3 +1,10 @@
 language: rust
 rust:
-    - nightly
+- nightly
+deploy:
+  provider: heroku
+  api_key:
+    secure: iGoqIdEwRGySy2IGya2Pd7ELU+Uf+Ye/kU6s32SEWATWJbfNaiYADO3wRkL9Sx0F6zYtTArS2aDISUKhajz3w2IaIN+ymLe+ESXv0G9e5jOo87R9MynAy/bnx38PuPlcKRwSP77rn8knkFd7A+WwvpxA9enj5MzMZ6kPAYpZK5sjnGR5bUyKZWqxk8C4r6C15Bunto86FnKEOF+VpS4aXiw4MA2j9x7VzL/AZCP+PnU3vcr3mEBYidCEdsjZxdDQtjm62RazAUXc026+8mZHgnJjtQ/F/0jPPxPQvqWfnYhyq+VjfSghjtT+Dl4shrzSLYqk5Y20JkkIK96Y2sAXyPOKOD22CouMBgIUb/gATPsTVlc2TFNohQC9iPo/tKntMw2bKjhs+Jkw2UhOgBtLkm3jhKgdp8WD53G82yV0Wq5NN52rxgaJr57P5fzQTi+j1esaTz3BcJc3Ga15anHNNzZbgLYSfdj3nVfgsUPcU85Ap5Q49ubiOVjFSuKtWtiPBtT/BBjxW43lBB/XXVTZBuA3c7A7c9dvf9jb4B6TSQ4EMGJceFYr/wYr77PGE2wO2uN/SJWbfhomH8GQuXj+IJ2Zl2dgM/U2W5OsXxqojlILkdAsslvA7qWsI10WF0i6zCIrHjQEsrMTLu0JQWeXeb+E5UR0weGZA0pm+ND/coQ=
+  app: tested-rocket-pastebin
+  on:
+    repo: wildarch/tested-rocket-pastebin
