@@ -6,3 +6,7 @@ authors = ["wildarch <daandegraaf9@gmail.com>"]
 [dependencies]
 rocket = "0.3.0"
 rocket_codegen = "0.3.0"
+uuid = { version = "0.5", features = ["v4"] }
+
+[dev-dependencies]
+tempdir = "0.3"
