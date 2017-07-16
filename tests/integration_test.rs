@@ -1,5 +1,7 @@
 extern crate tested_rocket_pastebin;
-use tested_rocket_pastebin::{rocket, paste_dir, HOME_TEXT, database};
+use tested_rocket_pastebin::{rocket, HOME_TEXT, database};
+use tested_rocket_pastebin::models::*;
+use tested_rocket_pastebin::schema::pastes::dsl::*;
 
 extern crate rocket;
 use rocket::local::Client;
@@ -11,13 +13,16 @@ use tempdir::TempDir;
 extern crate uuid;
 use uuid::Uuid;
 
-use std::fs::{self, File};
-use std::io::{Read, Write};
 use std::env;
 use std::mem::forget;
 
 extern crate dotenv;
 use dotenv::dotenv;
+
+extern crate diesel;
+use diesel::prelude::*;
+use diesel::associations::HasTable;
+
 
 fn get_client() -> Client {
     setup_environment();
@@ -52,49 +57,57 @@ fn setup_working_dir() {
 
 
 #[test]
+fn it_starts_clean() {
+    let conn = database::connect();
+    let results: Vec<Paste> = pastes.load(&conn).expect("Succesfull query");
+    assert!(results.is_empty());
+}
+
+#[test]
 fn it_shows_homepage() {
    let client = get_client();
    let mut res = client.get("/").dispatch();
    assert_eq!(res.status(), Status::Ok);
    assert_eq!(res.content_type().expect("valid Content-Type"), ContentType::Plain);
-   let body = res.body_string();
-   assert_eq!(body.expect("body content"), HOME_TEXT);
+   let paste_body = res.body_string();
+   assert_eq!(paste_body.expect("body content"), HOME_TEXT);
 }
 
 #[test]
 fn it_uploads_paste() {
-    let body = "Hello, world!";
+    let paste_body = "Hello, world!";
     let client = get_client();
     let mut res = client.post("/")
-        .body(body)
+        .body(paste_body)
         .header(ContentType::Plain)
         .dispatch();
-    let id = res.body_string().expect("id in response body");
-    let mut paste_path = paste_dir();
-    
-    paste_path.push(id);
-    let mut paste_file = File::open(paste_path).expect("paste file exists");
-    let mut saved_body = String::new();
-    paste_file.read_to_string(&mut saved_body).expect("paste file readable");
-    assert_eq!(body, saved_body);
+    let paste_id = res.body_string().expect("id in response body");
+    let parsed_paste_id: Uuid = Uuid::parse_str(&paste_id).expect("valid uuid returned");
+
+    let conn = database::connect();
+    let results : Vec<Paste> = pastes.filter(id.eq(parsed_paste_id)).load(&conn)
+        .expect("succesful database query");
+    assert_eq!(results.len(), 1);
+    let saved = &results[0];
+    assert_eq!(paste_body, saved.body);
 }
 
 #[test]
 fn it_shows_paste() {
     let client = get_client();
-    let body = "Hello, world!";
-    let id = Uuid::new_v4().hyphenated().to_string();
-    let mut paste_path = paste_dir();
-    fs::create_dir_all(&paste_path).expect("paste path created");
-    paste_path.push(&id);
-    {
-        let mut file = File::create(paste_path).expect("paste file newly created");
-        file.write_all(body.as_bytes()).expect("write expected body to paste file");
-    }
+    let paste_body = String::from("Hello, world!");
+    let paste_id = Uuid::new_v4();
+
+    let conn = database::connect();
+    diesel::insert(&Paste {
+        id: paste_id,
+        body: paste_body.clone()
+    }).into(pastes::table()).execute(&conn)
+        .expect("Succesfully inserted paste");
 
     let mut url = String::from("/");
-    url.push_str(&id);
+    url.push_str(&paste_id.hyphenated().to_string());
     let mut res = client.get(url).dispatch();
     assert_eq!(res.status(), Status::Ok);
-    assert_eq!(res.body_string().expect("present body"), body);
+    assert_eq!(res.body_string().expect("present body"), paste_body);
 }

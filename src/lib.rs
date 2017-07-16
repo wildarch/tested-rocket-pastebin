@@ -4,6 +4,7 @@
 extern crate rocket;
 use rocket::Rocket;
 
+extern crate rocket_contrib;
 extern crate uuid;
 
 #[macro_use]

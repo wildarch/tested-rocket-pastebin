@@ -1,12 +1,14 @@
 use uuid::Uuid;
-use std::fs::{self, File};
+use rocket_contrib::UUID;
 
 use ::*;
-use std::io;
-
-use rocket::Data;
 
 use database::DbConn;
+
+use ::schema::pastes::dsl::*;
+use diesel::prelude::*;
+use ::models::Paste;
+use diesel::associations::HasTable;
 
 pub const HOME_TEXT : &'static str = "
     USAGE
@@ -26,19 +28,20 @@ fn index() -> &'static str {
     HOME_TEXT
 }
 
-#[get("/<id>")]
-fn get_paste(id: String, db: DbConn) -> Option<File> {
-   let mut paste_path = paste_dir();
-   paste_path.push(id);
-   File::open(paste_path).ok()
+#[get("/<paste_id>")]
+fn get_paste(paste_id: UUID, db: DbConn) -> Option<String> {
+    pastes.filter(id.eq(paste_id.into_inner()))
+        .limit(1).load(&*db).ok()
+        .and_then(|rs: Vec<Paste> | rs.into_iter().next())
+        .and_then(|r| Some(r.body.clone()))
 }
 
-#[post("/", data = "<paste>")]
-fn upload_paste(paste: Data, db: DbConn) -> io::Result<String> {
-    let id = Uuid::new_v4().hyphenated().to_string();
-    let mut paste_path = paste_dir();
-    fs::create_dir_all(&paste_path)?;
-    paste_path.push(&id);
-    paste.stream_to_file(paste_path)?;
-    Ok(id)
+#[post("/", data = "<paste_body>")]
+fn upload_paste(paste_body: String, db: DbConn) -> Result<String, diesel::result::Error> {
+    let paste_id = Uuid::new_v4();
+    diesel::insert(&Paste {
+        id: paste_id,
+        body: paste_body
+    }).into(pastes::table()).execute(&*db)
+    .map(|_| paste_id.hyphenated().to_string())
 }
