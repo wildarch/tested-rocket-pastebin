@@ -1,5 +1,5 @@
 extern crate tested_rocket_pastebin;
-use tested_rocket_pastebin::{rocket, paste_dir, HOME_TEXT};
+use tested_rocket_pastebin::{rocket, paste_dir, HOME_TEXT, database};
 
 extern crate rocket;
 use rocket::local::Client;

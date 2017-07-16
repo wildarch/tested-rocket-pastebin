@@ -10,7 +10,6 @@ env:
 before_script:
   - cargo install diesel_cli
   - diesel setup
-  - diesel migration run
 deploy:
   provider: heroku
   api_key:
@@ -18,3 +17,6 @@ deploy:
   app: tested-rocket-pastebin
   on:
     repo: wildarch/tested-rocket-pastebin
+  run:
+   - cargo install diesel_cli 
+   - diesel migration run
