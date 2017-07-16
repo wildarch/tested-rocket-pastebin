@@ -3,6 +3,8 @@ rust:
 - nightly
 services:
   - postgresql
+env:
+  - DATABASE_URL=postgres@localhost/pastebin
 before_script:
   - cargo install diesel_cli
   - diesel migration run
