@@ -8,7 +8,7 @@ services:
 env:
     - DATABASE_URL=postgres://postgres@localhost/pastebin
 before_script:
-  - cargo install diesel_cli
+  - cargo install diesel_cli --force
   - diesel setup
 deploy:
   provider: heroku
@@ -18,5 +18,5 @@ deploy:
   on:
     repo: wildarch/tested-rocket-pastebin
   run:
-   - cargo install diesel_cli 
+   - cargo install diesel_cli --force
    - diesel migration run
