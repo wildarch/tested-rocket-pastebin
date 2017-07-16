@@ -1,6 +1,11 @@
 language: rust
 rust:
 - nightly
+services:
+  - postgresql
+before_script:
+  - cargo install diesel_cli
+  - diesel migration run
 deploy:
   provider: heroku
   api_key:

@@ -1,5 +1,5 @@
 extern crate tested_rocket_pastebin;
-use tested_rocket_pastebin::{get_rocket, HOME_TEXT, get_paste_dir};
+use tested_rocket_pastebin::{rocket, paste_dir, HOME_TEXT};
 
 extern crate rocket;
 use rocket::local::Client;
@@ -16,16 +16,37 @@ use std::io::{Read, Write};
 use std::env;
 use std::mem::forget;
 
+extern crate dotenv;
+use dotenv::dotenv;
+
 fn get_client() -> Client {
-    set_temp_current_dir();
-    let rocket = get_rocket();
+    setup_environment();
+    let rocket = rocket();
     Client::new(rocket).expect("valid rocket instance")
 }
 
-fn set_temp_current_dir() {
+fn setup_environment() {
+    setup_database();
+    setup_working_dir();
+}
+
+
+fn setup_database() {
+    dotenv().ok();
+    match env::var("DEV_DATABASE_URL") {
+        Ok(u) => {
+            env::set_var("DATABASE_URL", u);
+        }
+        Err(_) => {}
+    }
+    // Drop all tables
+}
+
+fn setup_working_dir() {
     // Put all pastes in a temporary directory instead of cluttering the working directory
     let tmp_dir = TempDir::new("pastebin-cwd").expect("valid temporary working directory");
     env::set_current_dir(&tmp_dir).expect("correctly set working directory");
+    // Don't drop tmp_dir, so we keep the directory around
     forget(tmp_dir)
 }
 
@@ -49,7 +70,7 @@ fn it_uploads_paste() {
         .header(ContentType::Plain)
         .dispatch();
     let id = res.body_string().expect("id in response body");
-    let mut paste_path = get_paste_dir();
+    let mut paste_path = paste_dir();
     
     paste_path.push(id);
     let mut paste_file = File::open(paste_path).expect("paste file exists");
@@ -63,7 +84,7 @@ fn it_shows_paste() {
     let client = get_client();
     let body = "Hello, world!";
     let id = Uuid::new_v4().hyphenated().to_string();
-    let mut paste_path = get_paste_dir();
+    let mut paste_path = paste_dir();
     fs::create_dir_all(&paste_path).expect("paste path created");
     paste_path.push(&id);
     {
